@@ -32,7 +32,6 @@ var URL_DEFAULT = "http://www.bing.com";
 
 var assertFileExists = function(infile) {
 
-  console.log(" param pass to file exists ", infile);
     var instr = infile.toString();
     if(!fs.existsSync(instr)) {
        // the file does not exist.. Verify if it is a url
@@ -42,10 +41,6 @@ var assertFileExists = function(infile) {
     }
     return instr;
 };
-
-var urlExists =  function(url){
-   console.log("param pass to urlExists ", url);
-}
 
 var cheerioHtmlFile = function(htmlfile) {
     return cheerio.load(fs.readFileSync(htmlfile));
@@ -85,8 +80,6 @@ if(require.main == module) {
         process.exit(1);
     }
 
-   console.log("PRogram" + program.file);
-   
    if (program.url)
    {
 
@@ -100,7 +93,6 @@ if(require.main == module) {
           }
           else
           {
-            console.log("succeeded");
             $ = cheerio.load(result);
              
            var checks = loadChecks(program.checks).sort();
