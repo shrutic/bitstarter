@@ -24,17 +24,28 @@ References:
 var fs = require('fs');
 var program = require('commander');
 var cheerio = require('cheerio');
+var rest = require('restler');
 var HTMLFILE_DEFAULT = "index.html";
 var CHECKSFILE_DEFAULT = "checks.json";
+var URL_DEFAULT = "http://www.bing.com";
+
 
 var assertFileExists = function(infile) {
+
+  console.log(" param pass to file exists ", infile);
     var instr = infile.toString();
     if(!fs.existsSync(instr)) {
-        console.log("%s does not exist. Exiting.", instr);
-        process.exit(1); // http://nodejs.org/api/process.html#process_process_exit_code
+       // the file does not exist.. Verify if it is a url
+
+       console.log("%s does not exist. Exiting.", instr);
+       process.exit(1);
     }
     return instr;
 };
+
+var urlExists =  function(url){
+   console.log("param pass to urlExists ", url);
+}
 
 var cheerioHtmlFile = function(htmlfile) {
     return cheerio.load(fs.readFileSync(htmlfile));
@@ -64,11 +75,57 @@ var clone = function(fn) {
 if(require.main == module) {
     program
         .option('-c, --checks <check_file>', 'Path to checks.json', clone(assertFileExists), CHECKSFILE_DEFAULT)
-        .option('-f, --file <html_file>', 'Path to index.html', clone(assertFileExists), HTMLFILE_DEFAULT)
+        .option('-f, --file <html_file>', 'Path to index.html', clone(assertFileExists))
+        .option('-u, --url <url_path>', 'Path to url') 
         .parse(process.argv);
-    var checkJson = checkHtmlFile(program.file, program.checks);
-    var outJson = JSON.stringify(checkJson, null, 4);
-    console.log(outJson);
+
+    if (!program.file && !program.url)
+    {
+        console.log("Need to specify either file or url");
+        process.exit(1);
+    }
+
+   console.log("PRogram" + program.file);
+   
+   if (program.url)
+   {
+
+      rest.get(program.url).on('complete', function(result)
+      {
+         if (result instanceof Error)
+          {
+             console.log("Error from trying as url: " + result.message);
+             console.log("%s does not exist. Exiting.", program.url);
+             process.exit(1); // http://nodejs.org/api/process.html#process_process_exit_code
+          }
+          else
+          {
+            console.log("succeeded");
+            $ = cheerio.load(result);
+             
+           var checks = loadChecks(program.checks).sort();
+	    var out = {};
+	    for(var ii in checks) {
+                var present = $(checks[ii]).length > 0;
+	        out[checks[ii]] = present;
+	    }
+            
+            var outJson = JSON.stringify(out, null, 4); 
+            console.log(outJson);    
+          }
+      });
+
+   }
+
+    
+    if (program.file)
+    {
+    	var checkJson = checkHtmlFile(program.file, program.checks);
+        var outJson = JSON.stringify(checkJson, null, 4);
+        console.log(outJson);
+    }
+    
+
 } else {
     exports.checkHtmlFile = checkHtmlFile;
 }
