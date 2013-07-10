@@ -79,6 +79,9 @@ if(require.main == module) {
         console.log("Need to specify either file or url");
         process.exit(1);
     }
+     
+    console.log("checks " + program.checks);
+    console.log("file " + program.file);
 
    if (program.url)
    {
